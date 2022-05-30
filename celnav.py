@@ -1,16 +1,16 @@
 # -*- coding: UTF-8 -*-
 
-''' Celestial Navigation.
+""" Celestial Navigation.
 
 The celnav module provides classes and functions usefull for celestial navigation.
-Needs PyEphem'''
+Needs PyEphem"""
 
 import ephem
 import math
 
 
 class Sight:
-    '''The sight class takes values of a singel sextant sight and executes calculations.
+    """The sight class takes values of a singel sextant sight and executes calculations.
 
     Input parameters:
         longitude of AP
@@ -18,19 +18,17 @@ class Sight:
         what kind of object
         the sextant altitude Hs without index error
         date and time of sight
-        elevation above sea level'''
+        elevation above sea level"""
 
     def __init__(self, aplon, aplat, target="sunll", Hs=0, time="2012", elev=0, temp=20, press=1013):
-        self.aplon=(aplon)
-        self.aplat=(aplat)
-        self.target=target
-        self.Hs=Hs
-        self.time=ephem.date(time)
+        self.aplon = aplon
+        self.aplat = aplat
+        self.target = target
+        self.Hs = Hs
+        self.time = ephem.date(time)
         self.elev = elev
         self.temperature = temp
         self.pressure = press
-
-
 
         self.ap = ephem.Observer()
         self.ap.lon = self.aplon
@@ -46,10 +44,10 @@ class Sight:
         elif self.target == ("sunul"):
             self.o = ephem.Sun()
             self.cordir = 1
-        elif self.target ==("moonll"):
+        elif self.target == ("moonll"):
             self.o = ephem.Moon()
             self.cordir = -1
-        elif self.target ==("moonul"):
+        elif self.target == ("moonul"):
             self.o = ephem.Moon()
             self.cordir = 1
         elif self.target == "venus":
@@ -68,96 +66,88 @@ class Sight:
             self.o = ephem.star(self.target)
             self.cordir = 0
 
-
         self.o.compute(self.ap)
-        self.Dip = 1.76*math.pi/10800*math.sqrt(self.elev)
+        self.Dip = 1.76 * math.pi / 10800 * math.sqrt(self.elev)
         self.Ho = self.Hs - self.Dip
-##        print "Dip: %f" %self.Dip
-##        print "altitude: %s" %self.o.alt
-##        print "azimut: %s" %self.o.az
-##        print "time %s" %self.ap.date
-##        print "aplon: %s" %self.ap.lon
 
+    ##        print "Dip: %f" %self.Dip
+    ##        print "altitude: %s" %self.o.alt
+    ##        print "azimut: %s" %self.o.az
+    ##        print "time %s" %self.ap.date
+    ##        print "aplon: %s" %self.ap.lon
 
     def getalt(self):
-        '''Returns Hc.'''
+        """Returns Hc."""
         return ephem.degrees(self.o.alt + (self.o.radius * self.cordir))
 
     def getaz(self):
-        '''Returns azimu til Hc.'''
+        """Returns azimu til Hc."""
         return self.o.az
 
     def gettime(self):
-        '''Retrns the time of sight as an ephem.date.'''
+        """Retrns the time of sight as an ephem.date."""
         return self.time
 
     def getintercept(self):
-        '''Returns the intercept.'''
-        return self.Ho-(self.o.alt + (self.o.radius * self.cordir))
+        """Returns the intercept."""
+        return self.Ho - (self.o.alt + (self.o.radius * self.cordir))
 
     def getlon(self):
-        '''Returns the AP longitude'''
+        """Returns the AP longitude"""
         return self.aplon
 
     def getlat(self):
-        '''Retrns the AP latitude'''
+        """Retrns the AP latitude"""
         return self.aplat
 
     def setlon(self, lon):
-        '''Set the longgitude of the AP'''
-        self.aplon= lon
+        """Set the longgitude of the AP"""
+        self.aplon = lon
         self.ap.lon = lon
         self.o.compute(self.ap)
 
     def setlat(self, lat):
-        '''Set the latitude of the AP'''
-        self.aplat= lat
-        self.ap.lat= lat
+        """Set the latitude of the AP"""
+        self.aplat = lat
+        self.ap.lat = lat
         self.o.compute(self.ap)
 
 
-
-
-
-
-
 def deadRec(lon, lat, dist, heading):
-    '''Dead reconing using planar geometry.
+    """Dead reconing using planar geometry.
 
     must not be used for longer distances!
-    Input last known position distance in NM, and true heading over ground in radiands or an ephem.angel.'''
+    Input last known position distance in NM, and true heading over ground in radiands or an ephem.angel."""
 
-    drlon=ephem.degrees(lon+(float(dist)/60/180*math.pi)*math.sin(heading)/math.cos(lat))
-    drlat=ephem.degrees(lat+(float(dist)/60/180*math.pi)*math.cos(heading))
+    drlon = ephem.degrees(lon + (float(dist) / 60 / 180 * math.pi) * math.sin(heading) / math.cos(lat))
+    drlat = ephem.degrees(lat + (float(dist) / 60 / 180 * math.pi) * math.cos(heading))
     return [drlon, drlat]
 
 
+def compfix(s1, s2, speed=0, hdg=0):
+    """Compute a running fix from to sights.
 
-
-def compfix (s1, s2, speed=0, hdg=0):
-    '''Compute a running fix from to sights.
-
-    Uses planar geometry but compensates with iteration over intercepts.'''
-    timediff = (s2.gettime() - s1.gettime())*24
-##    print "timedif f:%f " %timediff
-    distance = timediff*speed
-##    print "distance: %f" %distance
+    Uses planar geometry but compensates with iteration over intercepts."""
+    timediff = (s2.gettime() - s1.gettime()) * 24
+    ##    print "timedif f:%f " %timediff
+    distance = timediff * speed
+    ##    print "distance: %f" %distance
     drpos = deadRec(s1.getlon(), s1.getlat(), distance, hdg)
-##    print "drpos: %s   %s" %(drpos[0], drpos[1])
+    ##    print "drpos: %s   %s" %(drpos[0], drpos[1])
     s2.setlon(drpos[0])
     s2.setlat(drpos[1])
     i2 = s1.getintercept()
     i1 = s2.getintercept()
     while True:
-##        print "intercepts: %s  %s" %(ephem.degrees(i1), ephem.degrees(i2))
-        A = s2.getaz() - s1. getaz()
-##        print "A ist: %s oder %f" %(ephem.degrees(A), A)
-        A1 = math.atan((i2-(i1*math.cos(A)))/(i1*math.sin(A)))
-##        print "A1 ist: %s oder %f" %(ephem.degrees(A1), A1)
-        R = i1/(math.cos(A1))*(180*60/math.pi)
-##        print "R ist: %s oder %f" %(ephem.degrees(R), R)
+        ##        print "intercepts: %s  %s" %(ephem.degrees(i1), ephem.degrees(i2))
+        A = s2.getaz() - s1.getaz()
+        ##        print "A ist: %s oder %f" %(ephem.degrees(A), A)
+        A1 = math.atan((i2 - (i1 * math.cos(A))) / (i1 * math.sin(A)))
+        ##        print "A1 ist: %s oder %f" %(ephem.degrees(A1), A1)
+        R = i1 / (math.cos(A1)) * (180 * 60 / math.pi)
+        ##        print "R ist: %s oder %f" %(ephem.degrees(R), R)
         Az = s2.getaz() - A1
-##        print "azimut: %s" %ephem.degrees(Az)
+        ##        print "azimut: %s" %ephem.degrees(Az)
         pos1 = deadRec(s1.getlon(), s1.getlat(), R, Az)
         pos2 = deadRec(s2.getlon(), s2.getlat(), R, Az)
         s1.setlon(pos1[0])
@@ -167,18 +157,16 @@ def compfix (s1, s2, speed=0, hdg=0):
         i2 = s1.getintercept()
         i1 = s2.getintercept()
         if math.fabs(i1) < math.fabs(ephem.degrees("00:00:06")) or math.fabs(i2) < math.fabs(ephem.degrees("00:00:06")):
-        	break
-##        print "intercepts: %s  %s" %(ephem.degrees(i1), ephem.degrees(i2))
+            break
+    ##        print "intercepts: %s  %s" %(ephem.degrees(i1), ephem.degrees(i2))
     return pos2
 
 
-
-
 def compmfix(s, speed=0, hdg=0):
-    '''Compute a running fix from arbitary number of sights
+    """Compute a running fix from arbitary number of sights
 
     input is a list of sights, speed and heading.
-    Uses least squares method as described in the nautical almanac.'''
+    Uses least squares method as described in the nautical almanac."""
 
     AA = 0
     BB = 0
@@ -196,9 +184,9 @@ def compmfix(s, speed=0, hdg=0):
 
     while DO > 19:
         for i in sights:
-            timediff = (i.gettime() - sights[0].gettime())*24
+            timediff = (i.gettime() - sights[0].gettime()) * 24
             ##print "timedif f:%f " %timediff
-            distance = timediff*speed
+            distance = timediff * speed
             ##print "distance: %f" %distance
             drpos = deadRec(sights[0].getlon(), sights[0].getlat(), distance, hdg)
             ##print "drpos: %s   %s" %(drpos[0], drpos[1])
@@ -207,73 +195,63 @@ def compmfix(s, speed=0, hdg=0):
             P = i.getintercept()
             Z = i.getaz()
 
-            AA = AA + ( math.cos( Z ) )**2
-            BB = BB + math.cos( Z ) * math.sin( Z )
-            CC = CC + ( math.sin( Z ) )**2
-            DD = DD + P * math.cos( Z )
-            EE = EE + P * math.sin( Z )
+            AA = AA + (math.cos(Z)) ** 2
+            BB = BB + math.cos(Z) * math.sin(Z)
+            CC = CC + (math.sin(Z)) ** 2
+            DD = DD + P * math.cos(Z)
+            EE = EE + P * math.sin(Z)
             FF = FF + P**2
 
         Lon = sights[0].getlon()
         Lat = sights[0].getlat()
-        G = AA*CC-( BB )**2
-        BI = Lat+(CC*DD-BB*EE)/G
-        LI = Lon+(AA*EE-BB*DD)/(G*math.cos( Lat ))
-        print DO
+        G = AA * CC - (BB) ** 2
+        BI = Lat + (CC * DD - BB * EE) / G
+        LI = Lon + (AA * EE - BB * DD) / (G * math.cos(Lat))
+        print(DO)
         ## calculate distance to DRpos
-        DO = math.sqrt( ((LI-Lon)**2)*(( math.cos( Lat ))**2)+(BI-Lat)**2 )*60*180/math.pi
+        DO = math.sqrt(((LI - Lon) ** 2) * ((math.cos(Lat)) ** 2) + (BI - Lat) ** 2) * 60 * 180 / math.pi
         sights[0].setlon(LI)
         sights[0].setlat(BI)
 
     ##calculate standart deviation
-    S = FF - DD*(BI-Lat) - EE*(LI-Lon) * (math.cos( Lat ))
-    StDev = math.sqrt(S/(number-2))*60*180/math.pi
+    S = FF - DD * (BI - Lat) - EE * (LI - Lon) * (math.cos(Lat))
+    StDev = math.sqrt(S / (number - 2)) * 60 * 180 / math.pi
 
     return [ephem.degrees(LI), ephem.degrees(BI), DO, StDev]
 
 
-
-
-
-
-
 def nadeg(deg):
-    '''format radiants to the format usually used in the nautical almanac.
+    """format radiants to the format usually used in the nautical almanac.
 
-    (ddd°mm.m')'''
+    (ddd°mm.m')"""
     g = int(math.degrees(deg))
-    m = (math.degrees(deg)-g)*60
-    m = round(m,1)
-    if m==60:    ##prevent rounding to 60 minutes
+    m = (math.degrees(deg) - g) * 60
+    m = round(m, 1)
+    if m == 60:  ##prevent rounding to 60 minutes
         m = 0
-        g = g+1
-    gm = "%s°%04.1f'" %(g,abs(m))
+        g = g + 1
+    gm = "%s°%04.1f'" % (g, abs(m))
     return gm
 
 
-
-
-
 def rad_dm(rad):
-    '''format radiants to degrees and decimal minutes dd:mm.m
+    """format radiants to degrees and decimal minutes dd:mm.m
 
-    excepts radiants og ephem degree as input'''
+    excepts radiants og ephem degree as input"""
     g = int(math.degrees(rad))
-    m = (math.degrees(rad)-g)*60
-    m = round(m,1)
-    if m==60:   ##prevent rounding to 60 minutes
+    m = (math.degrees(rad) - g) * 60
+    m = round(m, 1)
+    if m == 60:  ##prevent rounding to 60 minutes
         m = 0
-        g = g+1
-    dm = "%s:%04.1f" %(g,abs(m))
+        g = g + 1
+    dm = "%s:%04.1f" % (g, abs(m))
     return dm
 
 
-
-
 def formlat(lat):
-    '''format latitude to human readable format
+    """format latitude to human readable format
 
-    (ddd°mm.m' NS)'''
+    (ddd°mm.m' NS)"""
     lat = lat.znorm
     if lat >= 0:
         ns = "N"
@@ -281,16 +259,14 @@ def formlat(lat):
         ns = "S"
 
     lat = nadeg(ephem.degrees(math.fabs(lat)))
-    out = '%s%s' %(lat, ns)
+    out = "%s%s" % (lat, ns)
     return out
 
 
-
-
 def formlon(lon):
-    '''forma longitude to human readable format
+    """forma longitude to human readable format
 
-    (ddd°mm.m' EW)'''
+    (ddd°mm.m' EW)"""
     lon = lon.znorm
     if lon >= 0:
         ns = "E"
@@ -299,9 +275,8 @@ def formlon(lon):
 
     lon = nadeg(ephem.degrees(math.fabs(lon)))
 
-    out = '%s%s' %(lon, ns)
+    out = "%s%s" % (lon, ns)
     return out
-
 
 
 ## testcode
@@ -328,8 +303,6 @@ def formlon(lon):
 # print formlat(pos[1])
 # print pos[2]
 # print pos[3]
-
-
 
 
 ##
