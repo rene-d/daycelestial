@@ -101,7 +101,7 @@ class Sight:
         return self.aplat
 
     def setlon(self, lon):
-        """Set the longgitude of the AP"""
+        """Set the longitude of the AP"""
         self.aplon = lon
         self.ap.lon = lon
         self.o.compute(self.ap)
@@ -117,7 +117,7 @@ def deadRec(lon, lat, dist, heading):
     """Dead reconing using planar geometry.
 
     must not be used for longer distances!
-    Input last known position distance in NM, and true heading over ground in radiands or an ephem.angel."""
+    Input last known position distance in NM, and true heading over ground in radians or an ephem.angel."""
 
     drlon = ephem.degrees(lon + (float(dist) / 60 / 180 * math.pi) * math.sin(heading) / math.cos(lat))
     drlat = ephem.degrees(lat + (float(dist) / 60 / 180 * math.pi) * math.cos(heading))
@@ -221,7 +221,7 @@ def compmfix(s, speed=0, hdg=0):
 
 
 def nadeg(deg):
-    """format radiants to the format usually used in the nautical almanac.
+    """format radians to the format usually used in the nautical almanac.
 
     (ddd°mm.m')"""
     g = int(math.degrees(deg))
@@ -235,9 +235,9 @@ def nadeg(deg):
 
 
 def rad_dm(rad):
-    """format radiants to degrees and decimal minutes dd:mm.m
+    """format radians to degrees and decimal minutes dd:mm.m
 
-    excepts radiants og ephem degree as input"""
+    excepts radians og ephem degree as input"""
     g = int(math.degrees(rad))
     m = (math.degrees(rad) - g) * 60
     m = round(m, 1)

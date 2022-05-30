@@ -1,4 +1,4 @@
-#! /usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: UTF-8 -*-
 
 
@@ -25,7 +25,9 @@ import celnav
 
 
 class MyApp:
-    def __init__(self, parent):
+    def __init__(self, parent: Tk):
+        parent.title("Celestial Navigation")
+
         self.myContainer1 = Frame(parent)
         self.myContainer1["bd"] = 5
         self.myContainer1["relief"] = "ridge"
@@ -145,9 +147,11 @@ class MyApp:
         self.time1Var.set(str(ephem.now()))
 
         def settime1():
+            """Set current time for sight 1."""
             self.time1Var.set(str(ephem.now()))
 
         def showHc1():
+            """Show horizon circle for sight 1."""
             drlon = ephem.degrees(self.entry_drlon.get() + ":" + self.entry_drlonm.get())
             drlat = ephem.degrees(self.entry_drlat.get() + ":" + self.entry_drlatm.get())
             self.hc1 = celnav.Sight(drlon, drlat, self.targetVar1.get(), time=self.entry_t1.get())
@@ -164,9 +168,11 @@ class MyApp:
         self.hcbutton1.grid(row=3, column=8, pady=3)
 
         def settime2():
+            """Set current time for sight 2."""
             self.time2Var.set(str(ephem.now()))
 
         def showHc2():
+            """Show horizon circle for sight 2."""
             drlon = ephem.degrees(self.entry_drlon.get() + ":" + self.entry_drlonm.get())
             drlat = ephem.degrees(self.entry_drlat.get() + ":" + self.entry_drlatm.get())
             self.hc2 = celnav.Sight(drlon, drlat, self.targetVar2.get(), time=self.entry_t2.get())
@@ -242,7 +248,31 @@ class MyApp:
         self.result = Label(self.myContainer3, textvariable=output, font=("Times", "14", "bold"))
         self.result.grid(row=1, column=1, columnspan=5)
 
+    def fill_example(self):
+        def set_input(entry: Entry, text: str):
+            entry.delete(0, END)
+            entry.insert("0", text)
+
+        set_input(self.entry_drlat, "41")
+        set_input(self.entry_drlatm, "30")
+        set_input(self.entry_drlon, "10")
+        set_input(self.entry_drlonm, "0")
+        set_input(self.entry_elev, "0")
+        set_input(self.entry_speed, "0")
+        set_input(self.entry_hdg, "0")
+
+        self.targetVar1.set("venus")
+        set_input(self.entry_hs1d, "50")
+        set_input(self.entry_hs1m, "10")
+        set_input(self.entry_t1, "2012/7/15 6:00:00")
+
+        self.targetVar2.set("venus")
+        set_input(self.entry_hs2d, "51")
+        set_input(self.entry_hs2m, "21")
+        set_input(self.entry_t2, "2012/7/15 11:00:00")
+
 
 root = Tk()
 myapp = MyApp(root)
+myapp.fill_example()
 root.mainloop()
